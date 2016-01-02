@@ -10,13 +10,8 @@ namespace PixelTracker
 {
     public class BitStorageBox : IDisposable
     {
-#if DEBUG
-        int mainDelay = 5000; // Number of seconds between each save
+        int mainDelay = 60000; // Number of milliseconds between each save
         int waitDelay = 1000; // If we have passed mainDelay without saving, poll every waitDelay milliseconds
-#else
-        int mainDelay = 2000;
-        int waitDelay = 1000;
-#endif
 
         bool[][] data;
         ConcurrentBag<int> dirtyrows;
@@ -113,10 +108,16 @@ namespace PixelTracker
             while (running)
             {
                 if (dirtyrows.Count == 0)
+                {
                     while (dirtyrows.Count == 0 && running) // Sleep while we have nothing to do
                         Thread.Sleep(waitDelay);
+                }
                 else
-                    Thread.Sleep(mainDelay); // Sleep a little bit anyway
+                {
+                    int div = 100;
+                    for (int q = 0; q < div && running; q++)
+                        Thread.Sleep(mainDelay / div); // Sleep a little bit anyway (but in small doses so we can exit in time)
+                }
 
                 if (!running)
                     break;
