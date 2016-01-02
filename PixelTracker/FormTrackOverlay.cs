@@ -123,7 +123,7 @@ namespace PixelTracker
 
         private void tmrRedraw_Tick(object sender, EventArgs e)
         {
-            if (redraw)
+            if (redraw && Visible)
             {
                 UpdateImage();
                 Invalidate();
