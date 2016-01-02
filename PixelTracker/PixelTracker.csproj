@@ -55,10 +55,12 @@
     <Compile Include="FormTrackOverlay.Designer.cs">
       <DependentUpon>FormTrackOverlay.cs</DependentUpon>
     </Compile>
+    <Compile Include="HeatmapStorageBox.cs" />
     <Compile Include="MouseHooks.cs" />
     <Compile Include="MouseTracker.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="StorageBox.cs" />
     <EmbeddedResource Include="FormTrackOverlay.resx">
       <DependentUpon>FormTrackOverlay.cs</DependentUpon>
     </EmbeddedResource>

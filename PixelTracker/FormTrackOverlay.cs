@@ -20,7 +20,7 @@ namespace PixelTracker
 
         Color trackColor = Color.Red;   // Color of trail overlays
         int updateInterval = 1000;      // Milliseconds between each refresh of trails
-
+        
         public FormTrackOverlay(MouseTracker tracker, Screen screen)
         {
             bounds = screen;
@@ -79,13 +79,13 @@ namespace PixelTracker
             IEnumerable<int> dirty = dirtyrows.ToArray().Distinct().OrderBy(i => i);
             dirtyrows = new ConcurrentBag<int>();
 
-            BitStorageBox px = mouse.GetStorage(bounds);
+            StorageBox px = mouse.GetStorage(bounds);
 
             foreach (int y in dirty)
             {
                 BitmapData bd = bitmap.LockBits(new Rectangle(0, y, bitmap.Width, 1), ImageLockMode.ReadWrite, PixelFormat.Format1bppIndexed);
 
-                byte[] row = px.GetRow(y);
+                byte[] row = px.GetBitBuffer(y);
                 Marshal.Copy(row, 0, bd.Scan0, row.Length);
 
                 bitmap.UnlockBits(bd);
@@ -125,9 +125,9 @@ namespace PixelTracker
         {
             if (redraw && Visible)
             {
+                redraw = false;
                 UpdateImage();
                 Invalidate();
-                redraw = false;
             }
         }
 

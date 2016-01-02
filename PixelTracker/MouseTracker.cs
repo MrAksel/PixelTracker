@@ -10,7 +10,7 @@ namespace PixelTracker
     {
         bool enabled;
         MouseHooks hooks;
-        Dictionary<Screen, BitStorageBox> storage;
+        Dictionary<Screen, StorageBox> storage;
 
         public event MouseHooks.MouseMovedEventHandler MouseMoved;
         
@@ -20,14 +20,14 @@ namespace PixelTracker
             hooks.MouseMoved += OnMouseMoved;
         }
 
-        public BitStorageBox GetStorage(Screen s)
+        public StorageBox GetStorage(Screen s)
         {
             return storage[s];
         }
 
         private void InitStorage()
         {
-            storage = new Dictionary<Screen, BitStorageBox>();
+            storage = new Dictionary<Screen, StorageBox>();
             foreach (Screen s in Screen.AllScreens)
             {
                 string filename = string.Format("{0}@({1},{2}).{3}x{4}.dat", s.DeviceName, s.Bounds.X, s.Bounds.Y, s.Bounds.Width, s.Bounds.Height);
@@ -66,7 +66,7 @@ namespace PixelTracker
 
         private void DisposeStorage()
         {
-            foreach (BitStorageBox box in storage.Values)
+            foreach (StorageBox box in storage.Values)
             {
                 box.Dispose();
             }
