@@ -8,7 +8,6 @@ namespace PixelTracker
 {
     public abstract class StorageBox : IDisposable
     {
-
         public abstract bool IsSet(int x, int y);
         public abstract void Set(int x, int y, bool set);
 

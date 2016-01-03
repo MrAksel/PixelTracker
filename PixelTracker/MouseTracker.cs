@@ -45,7 +45,7 @@ namespace PixelTracker
             if (enabled && x >= 0 && y >= 0)
             {
                 Screen s = Screen.FromPoint(new Point(x, y));
-                storage[s].Set(x - s.Bounds.X, y - s.Bounds.Y, true);
+                storage[s].IncCount(x - s.Bounds.X, y - s.Bounds.Y);
                 MouseMoved(x, y);
             }
         }
