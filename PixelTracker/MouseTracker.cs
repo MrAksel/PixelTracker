@@ -36,7 +36,7 @@ namespace PixelTracker
                 BitStorageBox box = new BitStorageBox(filename, s.Bounds.Width, s.Bounds.Height);
                 storage.Add(s, box);
 
-                Debug.WriteLine("Monitoring screen at {0}", (object)filename);
+                Log.Write("Monitoring screen at " + filename);
             }
         }
 

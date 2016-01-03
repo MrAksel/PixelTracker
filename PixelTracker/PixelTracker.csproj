@@ -56,6 +56,7 @@
       <DependentUpon>FormTrackOverlay.cs</DependentUpon>
     </Compile>
     <Compile Include="HeatmapStorageBox.cs" />
+    <Compile Include="Log.cs" />
     <Compile Include="MouseHooks.cs" />
     <Compile Include="MouseTracker.cs" />
     <Compile Include="Program.cs" />

@@ -50,6 +50,7 @@ namespace PixelTracker
             {
                 SetupComponents();
             }
+            Log.Write("Initialized overlay for screen " + screen.DeviceName);
         }
 
         private void SetupComponents()
@@ -63,6 +64,8 @@ namespace PixelTracker
             ni.ContextMenu = cms;
             ni.Visible = true;
             ni.DoubleClick += nico_DoubleClick;
+
+            Log.Write("This is primary screen");
         }
 
         private void MouseMoved(int x, int y)
@@ -76,7 +79,7 @@ namespace PixelTracker
 
         private void UpdateImage()
         {
-            IEnumerable<int> dirty = dirtyrows.ToArray().Distinct().OrderBy(i => i);
+            List<int> dirty = dirtyrows.ToArray().Distinct().OrderBy(i => i).ToList();
             dirtyrows = new ConcurrentBag<int>();
 
             StorageBox px = mouse.GetStorage(bounds);
@@ -90,6 +93,8 @@ namespace PixelTracker
 
                 bitmap.UnlockBits(bd);
             }
+            if (dirty.Count > 0)
+                Log.Write(string.Format("Updated {0} rows in overlay image", dirty.Count));
         }
 
         private void nico_DoubleClick(object sender, EventArgs e)
@@ -103,6 +108,7 @@ namespace PixelTracker
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            Log.Write("User clicked exit - byebye");
             Application.Exit();
         }
 

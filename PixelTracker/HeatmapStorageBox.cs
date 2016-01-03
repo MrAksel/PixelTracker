@@ -59,7 +59,7 @@ namespace PixelTracker
 
         public override void IncCount(int x, int y)
         {
-            if (y >= data.Length || x > width || y < 0 || x < 0)
+            if (y >= data.Length || x >= width || y < 0 || x < 0)
                 return;
             lock (dataLock)
             {
@@ -102,6 +102,7 @@ namespace PixelTracker
                     data[y][i] = ((uint)row[0] << 24) | ((uint)row[1] << 16) | ((uint)row[2] << 8) | ((uint)row[3]);
                 }
             }
+            Log.Write("Loaded data from " + fs.Name);
         }
 
         private void StartSaver()
@@ -146,7 +147,7 @@ namespace PixelTracker
                     fs.Write(row, 0, numBytes);
                     tot += numBytes;
                 }
-                Debug.WriteLine("Wrote {0} bytes", tot);
+                Log.Write(string.Format("Saved {0} bytes to {1}", tot, fs.Name));
             }
         }
 
@@ -158,6 +159,7 @@ namespace PixelTracker
 
             fs.Flush();
             fs.Close();
+            Log.Write("Closed " + fs.Name);
         }
     }
 }
