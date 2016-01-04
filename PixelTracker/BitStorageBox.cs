@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Threading;
 
 namespace PixelTracker
@@ -27,8 +24,6 @@ namespace PixelTracker
 
         public BitStorageBox(string file, int width, int height)
         {
-            file = "bit-" + file;
-
             data = new bool[height][];
 
             dataLock = new object();

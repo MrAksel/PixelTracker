@@ -32,6 +32,7 @@ namespace PixelTracker
             {
                 string filename = string.Format("{0}@({1},{2}).{3}x{4}.dat", s.DeviceName, s.Bounds.X, s.Bounds.Y, s.Bounds.Width, s.Bounds.Height);
                 filename = filename.Replace(@"\\.\", @"AbsPath-");
+                filename = "bit-" + filename;
 
                 BitStorageBox box = new BitStorageBox(filename, s.Bounds.Width, s.Bounds.Height);
                 storage.Add(s, box);

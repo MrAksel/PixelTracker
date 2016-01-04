@@ -25,8 +25,6 @@ namespace PixelTracker
 
         public HeatmapStorageBox(string file, int width, int height)
         {
-            file = "heat-" + file;
-
             data = new uint[height][];
 
             dataLock = new object();
