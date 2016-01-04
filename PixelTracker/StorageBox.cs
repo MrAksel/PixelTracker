@@ -10,8 +10,9 @@ namespace PixelTracker
         public abstract uint GetCount(int x, int y);
         public abstract void IncCount(int x, int y);
 
-        public abstract byte[] GetBitBuffer(int row);
-        public abstract uint[] GetHitCountBuffer(int row);
+        public abstract bool[] GetBoolBuffer(int row);      // Gets an array of bools where true=pixel covered.
+        public abstract byte[] GetBitBuffer(int row);       // Returns the bool array of the row packed as single bits into bytes
+        public abstract uint[] GetHitCountBuffer(int row);  // Count of number of hits on each pixel
 
         public abstract void Dispose();
     }

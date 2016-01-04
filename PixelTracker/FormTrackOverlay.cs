@@ -17,9 +17,6 @@ namespace PixelTracker
 
         Bitmap bitmap;
         ConcurrentBag<int> dirtyrows;
-
-        Color trackColor = Color.Red;   // Color of trail overlays
-        int updateInterval = 1000;      // Milliseconds between each refresh of trails
         
         public FormTrackOverlay(MouseTracker tracker, Screen screen)
         {
@@ -30,7 +27,7 @@ namespace PixelTracker
             bitmap = new Bitmap(screen.Bounds.Width, screen.Bounds.Height, PixelFormat.Format1bppIndexed);
             ColorPalette palette = bitmap.Palette;
             palette.Entries[0] = Color.White;
-            palette.Entries[1] = trackColor;
+            palette.Entries[1] = GlobalSettings.trackColor;
             bitmap.Palette = palette;
 
             BackgroundImage = bitmap;
@@ -44,7 +41,7 @@ namespace PixelTracker
             this.Size = screen.Bounds.Size;
 
             InitializeComponent();
-            tmrRedraw.Interval = updateInterval;
+            tmrRedraw.Interval = GlobalSettings.updateInterval;
 
             if (screen.Primary)
             {

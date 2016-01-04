@@ -8,9 +8,6 @@ namespace PixelTracker
     // Uses a single bit for each pixel
     public class BitStorageBox : StorageBox
     {
-        int mainDelay = 60000; // Number of milliseconds between each save
-        int waitDelay = 1000; // If we have passed mainDelay without saving, poll every waitDelay milliseconds
-
         bool[][] data;
         ConcurrentBag<int> dirtyrows;
         object dataLock;
@@ -66,6 +63,12 @@ namespace PixelTracker
             Set(x, y, true);
         }
 
+
+        public override bool[] GetBoolBuffer(int row)
+        {
+            return data[row];
+        }
+
         public override byte[] GetBitBuffer(int y)
         {
             byte[] row = new byte[numBytes];
@@ -87,7 +90,7 @@ namespace PixelTracker
         {
             return Array.ConvertAll(data[row], b => b ? 1U : 0U);
         }
-
+        
 
         private void LoadData()
         {
@@ -126,13 +129,13 @@ namespace PixelTracker
                 if (dirtyrows.Count == 0)
                 {
                     while (dirtyrows.Count == 0 && running) // Sleep while we have nothing to do
-                        Thread.Sleep(waitDelay);
+                        Thread.Sleep(GlobalSettings.waitDelay);
                 }
                 else
                 {
                     int div = 100;
                     for (int q = 0; q < div && running; q++)
-                        Thread.Sleep(mainDelay / div); // Sleep a little bit anyway (but in small doses so we can exit in time)
+                        Thread.Sleep(GlobalSettings.mainDelay / div); // Sleep a little bit anyway (but in small doses so we can exit in time)
                 }
 
                 if (!running)

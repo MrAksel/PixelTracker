@@ -9,9 +9,6 @@ namespace PixelTracker
     // Stores every pixel as a uint - 32 times the size of the BitStorageBox
     public class HeatmapStorageBox : StorageBox
     {
-        int mainDelay = 60000; // Number of milliseconds between each save
-        int waitDelay = 1000; // If we have passed mainDelay without saving, poll every waitDelay milliseconds
-
         uint[][] data;
         ConcurrentBag<int> dirtyrows;
         object dataLock;
@@ -66,17 +63,25 @@ namespace PixelTracker
             }
         }
 
+
+        public override bool[] GetBoolBuffer(int row)
+        {
+            return Array.ConvertAll(data[row], c => c > 0 ? true : false);
+        }
+
         public override byte[] GetBitBuffer(int y)
         {
             byte[] row = new byte[numBytes];
-            for (int x = 0; x < width; x++) // Combine all the bools to bytes
+            for (int i = 0; i < numBytes; i++) // Combine all the bools to bytes
             {
-                int i = x * 4;
-                uint val = data[y][x];
-                row[i + 0] = (byte)(val >> 24);
-                row[i + 1] = (byte)(val >> 16);
-                row[i + 2] = (byte)(val >> 8);
-                row[i + 3] = (byte)(val);
+                byte val = 0;
+                int j = i * 8;
+                for (int k = 0; k < 8; k++)
+                {
+                    if (data[y][j + k] > 0U)
+                        val |= (byte)(0x80 >> k);
+                }
+                row[i] = val;
             }
             return row;
         }
@@ -87,6 +92,22 @@ namespace PixelTracker
         }
 
 
+        // Just converts the ints into bytes for storage
+        private byte[] GetRowData(int y)
+        {
+            byte[] row = new byte[numBytes];
+            for (int x = 0; x < width; x++)
+            {
+                int i = x * 4;
+                uint val = data[y][x];
+                row[i + 0] = (byte)(val >> 24);
+                row[i + 1] = (byte)(val >> 16);
+                row[i + 2] = (byte)(val >> 8);
+                row[i + 3] = (byte)(val);
+            }
+            return row;
+        }
+        
         private void LoadData()
         {
             byte[] row = new byte[numBytes];
@@ -117,13 +138,13 @@ namespace PixelTracker
                 if (dirtyrows.Count == 0)
                 {
                     while (dirtyrows.Count == 0 && running) // Sleep while we have nothing to do
-                        Thread.Sleep(waitDelay);
+                        Thread.Sleep(GlobalSettings.waitDelay);
                 }
                 else
                 {
                     int div = 100;
                     for (int q = 0; q < div && running; q++)
-                        Thread.Sleep(mainDelay / div); // Sleep a little bit anyway (but in small doses so we can exit in time)
+                        Thread.Sleep(GlobalSettings.mainDelay / div); // Sleep a little bit anyway (but in small doses so we can exit in time)
                 }
 
                 if (!running)
@@ -139,7 +160,7 @@ namespace PixelTracker
                 int tot = 0;
                 foreach (int y in dirty)
                 {
-                    byte[] row = GetBitBuffer(y);
+                    byte[] row = GetRowData(y);
 
                     fs.Seek(y * numBytes, SeekOrigin.Begin);
                     fs.Write(row, 0, numBytes);

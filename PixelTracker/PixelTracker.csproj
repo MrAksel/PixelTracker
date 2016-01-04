@@ -55,6 +55,7 @@
     <Compile Include="FormTrackOverlay.Designer.cs">
       <DependentUpon>FormTrackOverlay.cs</DependentUpon>
     </Compile>
+    <Compile Include="GlobalSettings.cs" />
     <Compile Include="HeatmapStorageBox.cs" />
     <Compile Include="Log.cs" />
     <Compile Include="MouseHooks.cs" />

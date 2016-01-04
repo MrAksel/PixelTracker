@@ -13,7 +13,7 @@ namespace PixelTracker
         Dictionary<Screen, StorageBox> storage;
 
         public event MouseHooks.MouseMovedEventHandler MouseMoved;
-        
+
         public MouseTracker()
         {
             hooks = new MouseHooks();
@@ -32,9 +32,16 @@ namespace PixelTracker
             {
                 string filename = string.Format("{0}@({1},{2}).{3}x{4}.dat", s.DeviceName, s.Bounds.X, s.Bounds.Y, s.Bounds.Width, s.Bounds.Height);
                 filename = filename.Replace(@"\\.\", @"AbsPath-");
-                filename = "bit-" + filename;
 
-                BitStorageBox box = new BitStorageBox(filename, s.Bounds.Width, s.Bounds.Height);
+                if (GlobalSettings.countPixelHits)
+                    filename = "heat-" + filename;
+                else
+                    filename = "bit-" + filename;
+
+                StorageBox box;
+                if (GlobalSettings.countPixelHits) box = new HeatmapStorageBox(filename, s.Bounds.Width, s.Bounds.Height);
+                else box = new BitStorageBox(filename, s.Bounds.Width, s.Bounds.Height);
+
                 storage.Add(s, box);
 
                 Log.Write("Monitoring screen at " + filename);
