@@ -17,18 +17,26 @@ namespace PixelTracker
 
         Bitmap bitmap;
         ConcurrentBag<int> dirtyrows;
-        
+
         public FormTrackOverlay(MouseTracker tracker, Screen screen)
         {
             bounds = screen;
             mouse = tracker;
             mouse.MouseMoved += MouseMoved;
 
-            bitmap = new Bitmap(screen.Bounds.Width, screen.Bounds.Height, PixelFormat.Format1bppIndexed);
-            ColorPalette palette = bitmap.Palette;
-            palette.Entries[0] = Color.White;
-            palette.Entries[1] = GlobalSettings.trackColor;
-            bitmap.Palette = palette;
+            if (GlobalSettings.countPixelHits)
+            {
+                bitmap = new Bitmap(screen.Bounds.Width, screen.Bounds.Height, PixelFormat.Format24bppRgb); // Needs color to display heatmap
+            }
+            else
+            {
+                bitmap = new Bitmap(screen.Bounds.Width, screen.Bounds.Height, PixelFormat.Format1bppIndexed);
+
+                ColorPalette palette = bitmap.Palette;
+                palette.Entries[0] = Color.White;
+                palette.Entries[1] = GlobalSettings.trackColor;
+                bitmap.Palette = palette;
+            }
 
             BackgroundImage = bitmap;
 
@@ -83,15 +91,136 @@ namespace PixelTracker
 
             foreach (int y in dirty)
             {
-                BitmapData bd = bitmap.LockBits(new Rectangle(0, y, bitmap.Width, 1), ImageLockMode.ReadWrite, PixelFormat.Format1bppIndexed);
-
-                byte[] row = px.GetBitBuffer(y);
-                Marshal.Copy(row, 0, bd.Scan0, row.Length);
-
-                bitmap.UnlockBits(bd);
+                if (GlobalSettings.countPixelHits)
+                {
+                    UpdateRowHeatmap(bitmap, px as HeatmapStorageBox, y);
+                }
+                else
+                {
+                    UpdateRowBits(bitmap, px as BitStorageBox, y);
+                }
             }
             if (dirty.Count > 0)
                 Log.Write(string.Format("Updated {0} rows in overlay image", dirty.Count));
+        }
+
+        private void UpdateRowHeatmap(Bitmap bitmap, HeatmapStorageBox heatmapStorageBox, int y)
+        {
+            BitmapData bd = bitmap.LockBits(new Rectangle(0, y, bitmap.Width, 1), ImageLockMode.ReadWrite, PixelFormat.Format24bppRgb);
+
+            uint[] row = heatmapStorageBox.GetHitCountBuffer(y);
+            uint minHit = heatmapStorageBox.GetLowestCount();
+            uint maxHit = heatmapStorageBox.GetHighestCount();
+
+            byte[] stride = new byte[bd.Width * 3];
+            for (int x = 0; x < bd.Width; x++)
+            {
+                int off = x * 3;
+                uint cnt = row[x];
+
+                double hue, sat, val;
+                Colorize(cnt, minHit, maxHit, out hue, out sat, out val);
+                byte r, g, b;
+                HsvToRgb(hue, sat, val, out r, out g, out b);
+
+                
+                stride[off + 0] = b;
+                stride[off + 1] = g;
+                stride[off + 2] = r;
+                
+            }
+            Marshal.Copy(stride, 0, bd.Scan0, bd.Stride);
+            bitmap.UnlockBits(bd);
+        }
+
+        private void UpdateRowBits(Bitmap bitmap, BitStorageBox bitStorageBox, int y)
+        {
+            BitmapData bd = bitmap.LockBits(new Rectangle(0, y, bitmap.Width, 1), ImageLockMode.ReadWrite, PixelFormat.Format1bppIndexed);
+
+            byte[] row = bitStorageBox.GetBitBuffer(y);
+            Marshal.Copy(row, 0, bd.Scan0, row.Length);
+
+            bitmap.UnlockBits(bd);
+        }
+
+        private static void Colorize(uint hits, uint minHits, uint maxHits, out double hue, out double sat, out double val)
+        {
+            if (hits == 0)  // No hits for this pixel, make white (shows as transparent)
+            {
+                hue = 0.0;
+                sat = 0.0;
+                val = 1.0;
+                return;
+            }
+
+            uint diff = maxHits - minHits;
+            if (diff == 0)
+            {
+                // All pixels hit equally many times!!
+                hue = 120.0;
+                sat = 1.0;
+                val = 1.0;
+                return;
+            }
+
+            // We use hues between 0 (red) and 250 (blue)
+            double hotness = (maxHits - hits) / (double)diff;   // How warm this is from 1 to 0 (0 is warmest)
+            hue = hotness * 250.0;
+
+            double brightness = hits / (hits + 1.0);      // Sigmoid shaped function. Low counts give darker colors
+            val = brightness;
+
+            sat = 1.0;
+        }
+
+        // http://stackoverflow.com/questions/359612/how-to-change-rgb-color-to-hsv
+        private static void HsvToRgb(double hue, double saturation, double value, out byte r, out byte g, out byte b)
+        {
+            int hi = Convert.ToInt32(Math.Floor(hue / 60.0)) % 6;
+            double f = hue / 60.0 - Math.Floor(hue / 60.0);
+
+            value = value * 255;
+            int v = Convert.ToInt32(value);
+            int p = Convert.ToInt32(value * (1 - saturation));
+            int q = Convert.ToInt32(value * (1 - f * saturation));
+            int t = Convert.ToInt32(value * (1 - (1 - f) * saturation));
+
+            if (hi == 0)
+            {
+                r = (byte)v;
+                g = (byte)t;
+                b = (byte)p;
+            }
+            else if (hi == 1)
+            {
+                r = (byte)q;
+                g = (byte)v;
+                b = (byte)p;
+            }
+            else if (hi == 2)
+            {
+                r = (byte)p;
+                g = (byte)v;
+                b = (byte)t;
+            }
+            else if (hi == 3)
+            {
+                r = (byte)p;
+                g = (byte)q;
+                b = (byte)v;
+            }
+            else if (hi == 4)
+            {
+                r = (byte)t;
+                g = (byte)p;
+                b = (byte)v;
+            }
+            else
+            {
+                r = (byte)v;
+                g = (byte)p;
+                b = (byte)q;
+            }
         }
 
         private void nico_DoubleClick(object sender, EventArgs e)

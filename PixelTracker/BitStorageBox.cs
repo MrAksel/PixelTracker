@@ -90,7 +90,7 @@ namespace PixelTracker
         {
             return Array.ConvertAll(data[row], b => b ? 1U : 0U);
         }
-        
+
 
         private void LoadData()
         {
@@ -126,16 +126,14 @@ namespace PixelTracker
         {
             while (running)
             {
+                int div = 100;
+                for (int q = 0; q < div && running; q++)
+                    Thread.Sleep(GlobalSettings.mainDelay / div); // Sleep a little bit (but in small doses so we can exit in time)
+
                 if (dirtyrows.Count == 0)
                 {
                     while (dirtyrows.Count == 0 && running) // Sleep while we have nothing to do
                         Thread.Sleep(GlobalSettings.waitDelay);
-                }
-                else
-                {
-                    int div = 100;
-                    for (int q = 0; q < div && running; q++)
-                        Thread.Sleep(GlobalSettings.mainDelay / div); // Sleep a little bit anyway (but in small doses so we can exit in time)
                 }
 
                 if (!running)

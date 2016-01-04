@@ -11,11 +11,11 @@ namespace PixelTracker
     {
         // StorageBox settings
         internal static int mainDelay = 60000; // Number of milliseconds between each save
-        internal static int waitDelay = 1000;  // If we have passed mainDelay without saving, poll every waitDelay milliseconds
+        internal static int waitDelay = 10000;  // If we have passed mainDelay without saving, poll every waitDelay milliseconds
 
         // FormTrackOverlay settings
         internal static Color trackColor = Color.Red;   // Color of trail overlays on screen
-        internal static int updateInterval = 1000;      // Milliseconds between each redraw of image
+        internal static int updateInterval = 250;      // Milliseconds between each redraw of image
 
         // Storage type
         internal static bool countPixelHits = false;    // True to keep a count for each pixel how many times the mouse has passed it (heatmap style)

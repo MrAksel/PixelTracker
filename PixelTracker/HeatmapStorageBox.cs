@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading;
 
 namespace PixelTracker
@@ -12,6 +13,9 @@ namespace PixelTracker
         uint[][] data;
         ConcurrentBag<int> dirtyrows;
         object dataLock;
+
+        uint pxLowCount = uint.MaxValue;
+        uint pxMaxCount = 0;
 
         int width;    // Elements in a row
         int numBytes; // Number of bytes on a row
@@ -58,11 +62,33 @@ namespace PixelTracker
                 return;
             lock (dataLock)
             {
-                data[y][x]++;
+                uint val = data[y][x]++;
                 dirtyrows.Add(y);
+
+                if (val > pxMaxCount) // Update highest pixel
+                    pxMaxCount = val;
+                if ((val - 1) == pxLowCount) // If this might have been the lowest value in the array force a cache update on pxLowCount
+                    pxLowCount = uint.MaxValue;
             }
         }
 
+
+        internal uint GetLowestCount()
+        {
+            if (pxLowCount == uint.MaxValue) // Invalidated, update cache
+            {
+                return pxLowCount = data.SelectMany(row => row).Min();
+            }
+            else // Use cached copy
+            {
+                return pxLowCount;
+            }
+        }
+
+        public uint GetHighestCount()
+        {
+            return pxMaxCount;
+        }
 
         public override bool[] GetBoolBuffer(int row)
         {
@@ -107,7 +133,7 @@ namespace PixelTracker
             }
             return row;
         }
-        
+
         private void LoadData()
         {
             byte[] row = new byte[numBytes];
@@ -115,10 +141,14 @@ namespace PixelTracker
             {
                 fs.Read(row, 0, numBytes);
                 data[y] = new uint[width];
-                for (int i = 0; i < numBytes; i++)
+                for (int i = 0; i < width; i++)
                 {
                     int j = i * 4;
-                    data[y][i] = ((uint)row[0] << 24) | ((uint)row[1] << 16) | ((uint)row[2] << 8) | ((uint)row[3]);
+                    uint val = ((uint)row[j + 0] << 24) | ((uint)row[j + 1] << 16) | ((uint)row[j + 2] << 8) | ((uint)row[j + 3]);
+                    data[y][i] = val;
+
+                    if (val > pxMaxCount)
+                        pxMaxCount = val;
                 }
             }
             Log.Write("Loaded data from " + fs.Name);
@@ -135,16 +165,14 @@ namespace PixelTracker
         {
             while (running)
             {
+                int div = 100;
+                for (int q = 0; q < div && running; q++)
+                    Thread.Sleep(GlobalSettings.mainDelay / div); // Sleep a little bit (but in small doses so we can exit in time)
+
                 if (dirtyrows.Count == 0)
                 {
                     while (dirtyrows.Count == 0 && running) // Sleep while we have nothing to do
                         Thread.Sleep(GlobalSettings.waitDelay);
-                }
-                else
-                {
-                    int div = 100;
-                    for (int q = 0; q < div && running; q++)
-                        Thread.Sleep(GlobalSettings.mainDelay / div); // Sleep a little bit anyway (but in small doses so we can exit in time)
                 }
 
                 if (!running)
